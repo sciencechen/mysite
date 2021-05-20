@@ -39,11 +39,22 @@ def expandnode(request):
     except baidu_model.DoesNotExist:
         return HttpResponse(status=404)
 
+    hnode = baidu_model.objects.create(
+        root=queryset[0].root,
+        mid=uuid.uuid1(),
+        title=exword,
+        url=00,
+        parentid=mid,
+        nodetype="h"
+    )
+
+
     # 要同时执行，否则执行的每一条命令是作用在当前目录下，
     # 所以要cd转跳的瞬间（os.system前半句还未执行完的瞬间）
     # 把python run.py执行完
+    # 教训： 因为用的是cmd命令来传递参数，所以字符串不可以有空格，多一个空格就会改变后面命令的意思
     keyword = exword + "\\n" + queryset[0].title
-    parentid = mid
+    parentid = str(hnode.mid)
     root = queryset[0].root
 
     cmd = 'cd C:/chenjimiao/project/python/aiTeacherPlan/project/crawler/ && scrapy crawl baidu_spider -a keyword=' + keyword + ' -a parentid=' + parentid + ' -a root=' + root
