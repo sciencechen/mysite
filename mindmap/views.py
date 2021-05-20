@@ -1,3 +1,6 @@
+import os
+import uuid
+
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 
@@ -15,6 +18,55 @@ from django.views import View
 def index(request):
     return HttpResponse("this is mindmap-django server")
 
+def expandnode(request):
+    """
+   创建根节点
+   路由： GET  /books/<pk>/
+   """
+    mid = request.GET.get('mid', '0')
+    exword = request.GET.get('exword', '0')
+    splice = request.GET.get('splice', '0')
+
+    print('-------------')
+    print('拓展节点')
+    print(mid)
+    print(exword)
+    print(splice)
+    print('-------------')
+
+    try:
+        queryset = baidu_model.objects.filter(mid=mid)
+    except baidu_model.DoesNotExist:
+        return HttpResponse(status=404)
+
+    # 要同时执行，否则执行的每一条命令是作用在当前目录下，
+    # 所以要cd转跳的瞬间（os.system前半句还未执行完的瞬间）
+    # 把python run.py执行完
+    keyword = exword + "\\n" + queryset[0].title
+    parentid = mid
+    root = queryset[0].root
+
+    cmd = 'cd C:/chenjimiao/project/python/aiTeacherPlan/project/crawler/ && scrapy crawl baidu_spider -a keyword=' + keyword + ' -a parentid=' + parentid + ' -a root=' + root
+    # cmd = 'cd C:/chenjimiao/project/python/aiTeacherPlan/project/crawler/ && scrapy crawl baidu_spider -a keyword=' + keyword + ' -a parentid=' + parentid + ' -a root=' + "testroot"
+
+    test = os.system(cmd)
+
+
+    print(queryset[0].root)
+
+    # 最后返回
+    return JsonResponse({
+            'id': queryset[0].id,
+            'topic': queryset[0].title,
+            'url': queryset[0].url,
+            'parentid': queryset[0].parentid,
+            'mid': queryset[0].mid,
+            'root': queryset[0].root,
+            'nodetype': queryset[0].nodetype
+
+        }, status=201)
+
+
 
 def getmindmap(request):
     # 获取所有用户
@@ -27,55 +79,86 @@ def getmindmap(request):
     return HttpResponse(user[0].url)
     # return HttpResponseRedirect(user[0].url)
 
+def startcrawler(request):
+    # 要同时执行，否则执行的每一条命令是作用在当前目录下，
+    # 所以要cd转跳的瞬间（os.system前半句还未执行完的瞬间）
+    # 把python run.py执行完
+    keyword = request.GET.get('keyword', '0')
+    parentid = "root"
+    cmd = 'cd C:/chenjimiao/project/python/aiTeacherPlan/project/crawler/ && scrapy crawl baidu_spider -a keyword=' + keyword + ' -a parentid=' + parentid
+    test = os.system(cmd)
+    return JsonResponse({
+        'cmd信息': test,
+    }, status=201)
 
-class MindMapView(View):
+def creatroot(request):
+    """
+   创建根节点
+   路由： GET  /books/<pk>/
+   """
+    topic = request.GET.get('topic', '0')
+    type = request.GET.get('type', '0')
+    url = request.GET.get('url', '0')
 
-    def get(self, request):
-        """
-               查询所有图书
-               路由：GET /books/
-               """
-        queryset = baidu_model.objects.all()
-    #     book_list = []
-    #     for book in queryset:
-    #         book_list.append({
-    #             'id': book.id,
-    #             'title': book.title,
-    #             'url': book.url,
-    #             'parentid': book.parentid,
-    #         })
-    #     return JsonResponse(book_list, safe=False)
-    #     # return HttpResponse("this is post of mindmap-django server")
-    #
-    #     return JsonResponse("this is get of mindmap-django server,hhhhhh", safe=False)
-    #
-    #     pass
-    #
-    # def post(self, request):
-    #
-    #     return HttpResponse("this is post of mindmap-django server")
-    #
-    #     pass
-    #
-    # def delete(self, request, *args, **kwargs):
-    #     pk = kwargs.get("id")
-    #     data = request.data
-    #     if pk:
-    #         inst = baidu_model.objects.filter(id=pk).first()
-    #         if inst:
-    #             inst.delete()
-    #             return HttpResponse(data={"code": 200, "msg": "删除ok"})
-    #         else:
-    #             return HttpResponse(data={"code": 404, "msg": "删除失败,不存在!"})
-    #     else:
-    #         ids = data.get("ids")
-    #         if isinstance(ids, list):
-    #             objs = baidu_model.objects.filter(id__in=ids)
-    #             objs.delete()
-    #             return HttpResponse(data={"code": 200, "msg": "删除ok"})
+    print('-------------')
+    print('创建根节点')
+    print('-------------')
+
+    root = baidu_model.objects.create(
+        root=topic,
+        mid=uuid.uuid1(),
+        title=topic,
+        url=url,
+        parentid='isroot',
+        nodetype=type
+    )
+
+    # 最后返回
+    return JsonResponse({
+            'id': root.id,
+            'topic': root.title,
+            'url': root.url,
+            'parentid': root.parentid,
+            'mid': root.mid,
+            'root': root.root,
+            'nodetype': root.nodetype
+
+        }, status=201)
 
 
-# -------------------------------------------------------------------------
+def searchbyroot(request):
+    """
+   通过root根节点寻找同一类的节点集合
+   路由： GET  /books/<pk>/
+   """
+    searchbyroot = request.GET.get('searchbyroot', '0')
+    print('-------------')
+    print('通过root寻找jsmind： '+searchbyroot)
+    print('-------------')
+
+    try:
+        queryset = baidu_model.objects.filter(root=searchbyroot)
+    except baidu_model.DoesNotExist:
+        return HttpResponse(status=404)
+
+    node_list = []
+    for node in queryset:
+        node_list.append({
+            'id': node.id,
+            'title': node.title,
+            'url': node.url,
+            'parentid': node.parentid,
+            'mid': node.mid,
+            'root': node.root,
+            'nodetype': node.nodetype
+
+        })
+    # 最后返回
+    return JsonResponse(node_list, safe=False)
+
+
+
+
 class BooksAPIVIew(View):
     """
    查询所有图书、增加图书
@@ -220,3 +303,55 @@ class BaiduViewSet(viewsets.ModelViewSet):
     """
     queryset = baidu_model.objects.all()
     serializer_class = baidu_modelSerializer
+
+
+# -------------------------------------------------------------------------
+
+class MindMapView(View):
+
+    def get(self, request):
+        """
+               查询所有图书
+               路由：GET /books/
+               """
+        queryset = baidu_model.objects.all()
+    #     book_list = []
+    #     for book in queryset:
+    #         book_list.append({
+    #             'id': book.id,
+    #             'title': book.title,
+    #             'url': book.url,
+    #             'parentid': book.parentid,
+    #         })
+    #     return JsonResponse(book_list, safe=False)
+    #     # return HttpResponse("this is post of mindmap-django server")
+    #
+    #     return JsonResponse("this is get of mindmap-django server,hhhhhh", safe=False)
+    #
+    #     pass
+    #
+    # def post(self, request):
+    #
+    #     return HttpResponse("this is post of mindmap-django server")
+    #
+    #     pass
+    #
+    # def delete(self, request, *args, **kwargs):
+    #     pk = kwargs.get("id")
+    #     data = request.data
+    #     if pk:
+    #         inst = baidu_model.objects.filter(id=pk).first()
+    #         if inst:
+    #             inst.delete()
+    #             return HttpResponse(data={"code": 200, "msg": "删除ok"})
+    #         else:
+    #             return HttpResponse(data={"code": 404, "msg": "删除失败,不存在!"})
+    #     else:
+    #         ids = data.get("ids")
+    #         if isinstance(ids, list):
+    #             objs = baidu_model.objects.filter(id__in=ids)
+    #             objs.delete()
+    #             return HttpResponse(data={"code": 200, "msg": "删除ok"})
+
+
+
