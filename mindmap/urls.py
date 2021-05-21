@@ -12,9 +12,10 @@ urlpatterns = [
     re_path(r'^books/$', views.BooksAPIVIew.as_view()),
     re_path(r'^books/(?P<pk>\d+)/$', views.BookAPIView.as_view()),
 
-    path('startscraler/', views.startcrawler, name='启动爬虫'),
     path('searchbyroot/', views.searchbyroot, name='通过root根节点寻找同一类的节点集合'),
     path('creatroot/', views.creatroot, name='创建根节点'),
     path('expandnode/', views.expandnode, name='拓展节点'),
+    path('deletenode/', views.deletenode, name='删除节点'),
+    path('getrootlist/', views.getrootlist, name='获取jsmind的根节点列表'),
 
 ]

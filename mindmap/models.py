@@ -13,7 +13,8 @@ class baidu_model(models.Model):
     url = models.CharField(max_length=200, verbose_name='百度重定向链接')
     # 父节点的UUID
     parentid = models.CharField(max_length=40, verbose_name='父节点', default="root")
-    # a:url文本节点
+    # h:文本节点
+    # a:url节点
     # img:图片节点
     # video：视频节点
     # audio：音频节点

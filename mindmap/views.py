@@ -1,6 +1,7 @@
 import os
 import uuid
 
+import simplejson
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 
@@ -18,9 +19,81 @@ from django.views import View
 def index(request):
     return HttpResponse("this is mindmap-django server")
 
+def getrootlist(request):
+    """
+   获取根节点目录
+   路由： GET  /books/<pk>/
+   """
+    print('-------------')
+    print('获取根节点目录')
+    print('-------------')
+
+    try:
+        queryset = baidu_model.objects.all()
+    except baidu_model.DoesNotExist:
+        return HttpResponse(status=404)
+
+    root_set = set()
+    for node in queryset:
+        root_set.add(node.root)
+
+    print(root_set)
+
+    root_list = []
+    for value in root_set:
+        root_list.append({
+            "value": value
+        })
+
+
+    # 最后返回
+    return JsonResponse(root_list, safe=False)
+
+
+
+def deletenode(request):
+    """
+   删除图书
+   路由： POST deletenode/
+   """
+    # nodelist = request.POST.get('nodelist', 123)
+    nodejson = simplejson.loads(request.body)
+    predata = nodejson['predata']['data']
+    laterdata = nodejson['laterdata']['data']
+
+    print(predata)
+    print(laterdata)
+
+    predatamid = []
+    laterdatamid = []
+
+    for node in predata:
+        predatamid.append(node['id'])
+
+    for node in laterdata:
+        laterdatamid.append(node['id'])
+
+
+
+    deletenodemidlist = set(predatamid).difference(laterdatamid)
+    print('被删除节点的mid', deletenodemidlist)
+    print('被删除节点的数量： ', len(deletenodemidlist))
+
+    for mid in deletenodemidlist:
+        try:
+            queryset = baidu_model.objects.filter(mid=mid)
+        except baidu_model.DoesNotExist:
+            return HttpResponse(status=404)
+        queryset.delete()
+
+
+    # return JsonResponse({'id' :'nihao'})
+    return HttpResponse(status=204)
+
+
 def expandnode(request):
     """
-   创建根节点
+   拓展节点
    路由： GET  /books/<pk>/
    """
     mid = request.GET.get('mid', '0')
@@ -49,11 +122,15 @@ def expandnode(request):
     )
 
 
+
     # 要同时执行，否则执行的每一条命令是作用在当前目录下，
     # 所以要cd转跳的瞬间（os.system前半句还未执行完的瞬间）
     # 把python run.py执行完
     # 教训： 因为用的是cmd命令来传递参数，所以字符串不可以有空格，多一个空格就会改变后面命令的意思
-    keyword = exword + "\\n" + queryset[0].title
+    if splice == '带上节点':
+        keyword = exword + "," + queryset[0].title
+    else:
+        keyword = exword
     parentid = str(hnode.mid)
     root = queryset[0].root
 
@@ -62,20 +139,27 @@ def expandnode(request):
 
     test = os.system(cmd)
 
+    print('返回根节点为', queryset[0].root, '的jsmind')
 
-    print(queryset[0].root)
+    try:
+        queryset = baidu_model.objects.filter(root=root)
+    except baidu_model.DoesNotExist:
+        return HttpResponse(status=404)
 
+    node_list = []
+    for node in queryset:
+        node_list.append({
+            'id': node.id,
+            'title': node.title,
+            'url': node.url,
+            'parentid': node.parentid,
+            'mid': node.mid,
+            'root': node.root,
+            'nodetype': node.nodetype
+
+        })
     # 最后返回
-    return JsonResponse({
-            'id': queryset[0].id,
-            'topic': queryset[0].title,
-            'url': queryset[0].url,
-            'parentid': queryset[0].parentid,
-            'mid': queryset[0].mid,
-            'root': queryset[0].root,
-            'nodetype': queryset[0].nodetype
-
-        }, status=201)
+    return JsonResponse(node_list, safe=False)
 
 
 
@@ -90,17 +174,6 @@ def getmindmap(request):
     return HttpResponse(user[0].url)
     # return HttpResponseRedirect(user[0].url)
 
-def startcrawler(request):
-    # 要同时执行，否则执行的每一条命令是作用在当前目录下，
-    # 所以要cd转跳的瞬间（os.system前半句还未执行完的瞬间）
-    # 把python run.py执行完
-    keyword = request.GET.get('keyword', '0')
-    parentid = "root"
-    cmd = 'cd C:/chenjimiao/project/python/aiTeacherPlan/project/crawler/ && scrapy crawl baidu_spider -a keyword=' + keyword + ' -a parentid=' + parentid
-    test = os.system(cmd)
-    return JsonResponse({
-        'cmd信息': test,
-    }, status=201)
 
 def creatroot(request):
     """
