@@ -19,6 +19,14 @@ class baidu_model(models.Model):
     # video：视频节点
     # audio：音频节点
     nodetype = models.CharField(max_length=20, verbose_name='节点类型', default="a")
+    source = models.CharField(max_length=20, verbose_name='链接来源', default="unknown")
+    a = models.CharField(max_length=20, verbose_name='占位', default="xx")
+    b = models.CharField(max_length=20, verbose_name='占位', default="xx")
+    c = models.CharField(max_length=20, verbose_name='占位', default="xx")
+    d = models.CharField(max_length=20, verbose_name='占位', default="xx")
+    e = models.CharField(max_length=20, verbose_name='占位', default="xx")
+
+
 
     # def delete(self, using=None, keep_parents=False):
     #     self.is_delete = True
