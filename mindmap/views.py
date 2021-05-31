@@ -399,21 +399,21 @@ class MindMapView(View):
                路由：GET /books/
                """
         queryset = baidu_model.objects.all()
-    #     book_list = []
-    #     for book in queryset:
-    #         book_list.append({
-    #             'id': book.id,
-    #             'title': book.title,
-    #             'url': book.url,
-    #             'parentid': book.parentid,
-    #         })
-    #     return JsonResponse(book_list, safe=False)
-    #     # return HttpResponse("this is post of mindmap-django server")
-    #
-    #     return JsonResponse("this is get of mindmap-django server,hhhhhh", safe=False)
-    #
-    #     pass
-    #
+        book_list = []
+        for book in queryset:
+            book_list.append({
+                'id': book.id,
+                'title': book.title,
+                'url': book.url,
+                'parentid': book.parentid,
+            })
+        return JsonResponse(book_list, safe=False)
+        # return HttpResponse("this is post of mindmap-django server")
+
+        return JsonResponse("this is get of mindmap-django server,hhhhhh", safe=False)
+
+        pass
+
     # def post(self, request):
     #
     #     return HttpResponse("this is post of mindmap-django server")
