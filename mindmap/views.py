@@ -134,7 +134,7 @@ def expandnode(request):
     parentid = str(hnode.mid)
     root = queryset[0].root
 
-    cmd = 'cd C:/chenjimiao/project/python/aiTeacherPlan/project/crawler/ && scrapy crawl baidu_spider -a keyword=' + keyword + ' -a parentid=' + parentid + ' -a root=' + root
+    cmd = 'cd /home/admin/crawler/ && scrapy crawl baidu_spider -a keyword=' + keyword + ' -a parentid=' + parentid + ' -a root=' + root
     # cmd = 'cd C:/chenjimiao/project/python/aiTeacherPlan/project/crawler/ && scrapy crawl baidu_spider -a keyword=' + keyword + ' -a parentid=' + parentid + ' -a root=' + "testroot"
 
     test = os.system(cmd)
